@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CA Compliance Task & Workflow Generator | Node.js & MongoDB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h2>TaxFlow CA</h2>
+          <span class="badge-sub">Compliance Engine</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard & Workflows
+        </button>
+        <button class="nav-item" data-tab="generator">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+          Workflow Generator
+        </button>
+        <button class="nav-item" data-tab="templates">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          CA Templates
+        </button>
+        <button class="nav-item" data-tab="api-docs">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          API Endpoints & Docs
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="db-status">
+          <span class="status-indicator online"></span>
+          <span>MongoDB: <strong>Connected</strong></span>
+        </div>
+        <p class="server-info">Express v5 &bull; Node.js v22</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="page-title">Compliance Workflows</h1>
+          <p id="page-subtitle">Generate, manage, track stages and tasks for Chartered Accountant compliance</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" id="btn-refresh" title="Reload workflows">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            Refresh
+          </button>
+          <button class="btn btn-primary" id="btn-open-generator">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Generate Workflow
+          </button>
+        </div>
+      </header>
+
+      <!-- Stats Overview Bar -->
+      <section class="stats-grid" id="stats-section">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Total Workflows</span>
+            <span class="stat-icon purple">📁</span>
+          </div>
+          <div class="stat-value" id="stat-total-workflows">0</div>
+          <div class="stat-meta">Active compliance engagements</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Total Tasks</span>
+            <span class="stat-icon blue">📋</span>
+          </div>
+          <div class="stat-value" id="stat-total-tasks">0</div>
+          <div class="stat-meta"><span id="stat-completed-tasks">0</span> completed</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Overall Completion</span>
+            <span class="stat-icon green">⚡</span>
+          </div>
+          <div class="stat-value" id="stat-completion-rate">0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="stat-progress-bar" style="width: 0%"></div></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">High / Urgent Priority</span>
+            <span class="stat-icon red">🔥</span>
+          </div>
+          <div class="stat-value" id="stat-high-priority">0</div>
+          <div class="stat-meta">Attention required</div>
+        </div>
+      </section>
+
+      <!-- TAB 1: Dashboard & Workflows -->
+      <section class="tab-pane active" id="tab-dashboard">
+        <!-- Filter and Search Toolbar -->
+        <div class="filter-toolbar">
+          <div class="search-box">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="filter-search" placeholder="Search service, purpose, or client...">
+          </div>
+          <div class="filter-group">
+            <select id="filter-priority" class="select-filter">
+              <option value="">All Priorities</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="filter-status" class="select-filter">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select id="view-mode-toggle" class="select-filter">
+              <option value="detailed">Detailed View</option>
+              <option value="simple">Prompt Simple View</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Workflows Container -->
+        <div id="workflows-container" class="workflows-container">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading compliance workflows from MongoDB...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Workflow Generator Form -->
+      <section class="tab-pane" id="tab-generator">
+        <div class="generator-wrapper">
+          <div class="panel-card form-panel">
+            <div class="panel-header">
+              <div>
+                <h3>Generate Compliance Workflow</h3>
+                <p>Input compliance details to automatically generate stages and tasks</p>
+              </div>
+              <div class="quick-preset-chips">
+                <span class="chip-label">Quick fill:</span>
+                <button type="button" class="preset-chip" onclick="applyPreset('gst')">GST Filing</button>
+                <button type="button" class="preset-chip" onclick="applyPreset('itr')">ITR Filing</button>
+                <button type="button" class="preset-chip" onclick="applyPreset('tds')">TDS Return</button>
+                <button type="button" class="preset-chip" onclick="applyPreset('audit')">Statutory Audit</button>
+                <button type="button" class="preset-chip" onclick="applyPreset('custom')">Custom Service</button>
+              </div>
+            </div>
+
+            <form id="workflow-generator-form">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="input-serviceType">Service Type <span class="req">*</span></label>
+                  <input type="text" id="input-serviceType" required placeholder="e.g. GST Filing, Income Tax Return, TDS Return">
+                  <span class="field-hint">e.g. "GST Filing"</span>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="input-priority">Priority <span class="req">*</span></label>
+                  <select id="input-priority" required>
+                    <option value="high" selected>High</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="input-purpose">Purpose <span class="req">*</span></label>
+                <textarea id="input-purpose" rows="3" required placeholder="e.g. Monthly GST return filing, Form 3CD audit, etc.">Monthly GST return filing</textarea>
+                <span class="field-hint">Describe the compliance purpose (e.g. "Monthly GST return filing")</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="input-clientName">Client Name</label>
+                  <input type="text" id="input-clientName" placeholder="e.g. Apex Enterprises Pvt Ltd" value="Apex Enterprises Pvt Ltd">
+                </div>
+                <div class="form-group flex-1">
+                  <label for="input-period">Financial Period</label>
+                  <input type="text" id="input-period" placeholder="e.g. September 2026 / FY 2026-27" value="September 2026">
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-generate-submit">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  Generate & Store Workflow
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="resetGeneratorForm()">Reset</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Live API Preview Panel -->
+          <div class="panel-card preview-panel">
+            <div class="panel-header">
+              <h3>API Payload & Stored Result</h3>
+              <div class="tab-pills">
+                <button class="pill active" id="pill-request" onclick="switchPreviewTab('request')">Request JSON</button>
+                <button class="pill" id="pill-response" onclick="switchPreviewTab('response')">Generated Output</button>
+              </div>
+            </div>
+            <div class="code-container">
+              <pre id="preview-json"><code class="json">// Click 'Generate & Store Workflow' or choose a preset to inspect live payload</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: CA Templates -->
+      <section class="tab-pane" id="tab-templates">
+        <div class="templates-header">
+          <h3>Pre-Configured CA Compliance Standard Templates</h3>
+          <p>These standard industry workflows are built into the generator engine and auto-populate stages and statutory tasks.</p>
+        </div>
+        <div class="templates-grid" id="templates-grid">
+          <div class="spinner"></div>
+        </div>
+      </section>
+
+      <!-- TAB 4: API Docs & Interactive Explorer -->
+      <section class="tab-pane" id="tab-api-docs">
+        <div class="api-docs-container">
+          <div class="api-intro">
+            <h3>CA Compliance Task Generator - REST API Documentation</h3>
+            <p>Full RESTful specification for integrating with external CA practice management software, ERPs, and automated bots.</p>
+          </div>
+
+          <div class="endpoints-list">
+            <!-- POST /api/workflows/generate -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-path">/api/workflows/generate</span>
+                <span class="endpoint-desc">Accepts serviceType, purpose, priority and generates & stores workflow</span>
+              </div>
+              <div class="endpoint-body">
+                <p><strong>Sample Request:</strong></p>
+                <pre><code>{
+  "serviceType": "GST Filing",
+  "purpose": "Monthly GST return filing",
+  "priority": "high"
+}</code></pre>
+                <p><strong>Sample Response (Simple Format):</strong></p>
+                <pre><code>{
+  "serviceType": "GST Filing",
+  "stages": [
+    {
+      "name": "Document Collection",
+      "tasks": ["Collect sales invoices", "Collect purchase invoices"]
+    },
+    {
+      "name": "Verification",
+      "tasks": ["Verify invoices", "Reconcile data"]
+    },
+    {
+      "name": "Filing",
+      "tasks": ["Prepare return", "Review return", "Submit return"]
+    }
+  ]
+}</code></pre>
+              </div>
+            </div>
+
+            <!-- GET /api/workflows -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-path">/api/workflows</span>
+                <span class="endpoint-desc">List all workflows with optional query filters (?serviceType, ?status, ?priority, ?search, ?format=simple)</span>
+              </div>
+            </div>
+
+            <!-- GET /api/workflows/:id -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-path">/api/workflows/:id</span>
+                <span class="endpoint-desc">Get specific workflow by MongoDB ObjectId (supports ?format=simple)</span>
+              </div>
+            </div>
+
+            <!-- PUT /api/workflows/:id -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method put">PUT</span>
+                <span class="endpoint-path">/api/workflows/:id</span>
+                <span class="endpoint-desc">Update workflow properties (serviceType, purpose, priority, status)</span>
+              </div>
+            </div>
+
+            <!-- DELETE /api/workflows/:id -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method delete">DELETE</span>
+                <span class="endpoint-path">/api/workflows/:id</span>
+                <span class="endpoint-desc">Delete a workflow and its associated stages/tasks</span>
+              </div>
+            </div>
+
+            <!-- POST /api/workflows/:id/stages -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-path">/api/workflows/:id/stages</span>
+                <span class="endpoint-desc">Add a new stage to an existing workflow</span>
+              </div>
+            </div>
+
+            <!-- POST /api/workflows/:id/stages/:stageId/tasks -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-path">/api/workflows/:id/stages/:stageId/tasks</span>
+                <span class="endpoint-desc">Add a task to a stage</span>
+              </div>
+            </div>
+
+            <!-- PATCH /api/workflows/:id/stages/:stageId/tasks/:taskId -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="endpoint-path">/api/workflows/:id/stages/:stageId/tasks/:taskId</span>
+                <span class="endpoint-desc">Update a task title, assignedTo, or status</span>
+              </div>
+            </div>
+
+            <!-- PATCH /api/workflows/:id/stages/:stageId/tasks/:taskId/toggle -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="endpoint-path">/api/workflows/:id/stages/:stageId/tasks/:taskId/toggle</span>
+                <span class="endpoint-desc">Toggle task status between pending and completed</span>
+              </div>
+            </div>
+
+            <!-- DELETE /api/workflows/:id/stages/:stageId/tasks/:taskId -->
+            <div class="endpoint-card">
+              <div class="endpoint-header">
+                <span class="method delete">DELETE</span>
+                <span class="endpoint-path">/api/workflows/:id/stages/:stageId/tasks/:taskId</span>
+                <span class="endpoint-desc">Delete task from stage</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Add Stage -->
+  <div class="modal-overlay" id="modal-add-stage">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Add Stage to Workflow</h4>
+        <button class="btn-close" onclick="closeModal('modal-add-stage')">&times;</button>
+      </div>
+      <form id="form-add-stage">
+        <input type="hidden" id="modal-workflow-id">
+        <div class="form-group">
+          <label for="stage-name-input">Stage Name <span class="req">*</span></label>
+          <input type="text" id="stage-name-input" required placeholder="e.g. Audit Review & Partner Sign-off">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Add Stage</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-stage')">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Task -->
+  <div class="modal-overlay" id="modal-add-task">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Add Task to Stage</h4>
+        <button class="btn-close" onclick="closeModal('modal-add-task')">&times;</button>
+      </div>
+      <form id="form-add-task">
+        <input type="hidden" id="modal-task-wf-id">
+        <input type="hidden" id="modal-task-stage-id">
+        <div class="form-group">
+          <label for="task-title-input">Task Title <span class="req">*</span></label>
+          <input type="text" id="task-title-input" required placeholder="e.g. Reconcile GSTR-2B with purchase register">
+        </div>
+        <div class="form-group">
+          <label for="task-assigned-input">Assigned To</label>
+          <input type="text" id="task-assigned-input" placeholder="e.g. CA Kishan Singh" value="Unassigned">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Add Task</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-task')">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
